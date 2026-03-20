@@ -5,6 +5,7 @@
 **Project Name:** FlowGrid - Intelligent Traffic Management System  
 **Category:** Smart Transportation & Urban Planning  
 **Hackathon:** [Hackathon Name] 2026  
+**Team:** STRAWHATS
 
 ## 📋 Project Overview
 
@@ -73,6 +74,7 @@ FlowGrid is a comprehensive traffic management system that leverages computer vi
 
 ## 🤝 Team
 
+- **Team Name:** STRAWHATS
 - **Lead Developer:** Rahul N
 - **Domain:** Computer Vision & Machine Learning
 - **Expertise:** Traffic Management Systems, Urban Planning
@@ -92,4 +94,4 @@ FlowGrid is a comprehensive traffic management system that leverages computer vi
 
 ---
 
-**Note:** This project was developed for hackathon purposes and showcases innovative approaches to smart city traffic management challenges.
+**Note:** This project was developed for hackathon purposes by Team STRAWHATS and showcases innovative approaches to smart city traffic management challenges.
