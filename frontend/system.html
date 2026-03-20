@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowGrid — System</title>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto',sans-serif;background:#f1f3f4;min-height:100vh;}
+.gm-header{position:fixed;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000;display:flex;align-items:center;padding:0 16px;gap:12px;}
+.gm-logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.gm-logo-dots{display:flex;gap:2px;}
+.gm-logo-dots span{width:8px;height:8px;border-radius:50%;}
+.gm-logo-dots span:nth-child(1){background:#4285F4;}
+.gm-logo-dots span:nth-child(2){background:#EA4335;}
+.gm-logo-dots span:nth-child(3){background:#FBBC05;}
+.gm-logo-dots span:nth-child(4){background:#34A853;}
+.gm-logo-text{font-family:'Google Sans',sans-serif;font-size:1.1rem;font-weight:500;color:#202124;}
+.gm-nav{display:flex;align-items:center;gap:2px;margin-left:8px;}
+.gm-nav a{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:4px;text-decoration:none;font-family:'Google Sans',sans-serif;font-size:0.85rem;font-weight:500;color:#5f6368;transition:all 0.15s;}
+.gm-nav a:hover{background:#f1f3f4;color:#202124;}
+.gm-nav a.active{color:#1a73e8;background:#e8f0fe;}
+.gm-header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.gm-status-chip{display:flex;align-items:center;gap:6px;background:#e6f4ea;color:#137333;padding:5px 12px;border-radius:16px;font-size:0.78rem;font-family:'Google Sans',sans-serif;font-weight:500;}
+.gm-status-dot{width:7px;height:7px;border-radius:50%;background:#34A853;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.gm-logout{background:none;border:1px solid #dadce0;border-radius:4px;padding:6px 14px;font-family:'Google Sans',sans-serif;font-size:0.82rem;color:#5f6368;cursor:pointer;}
+.gm-logout:hover{background:#f1f3f4;}
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f3f4;}
+.metric-row:last-child{border-bottom:none;}
+.metric-label{font-size:0.82rem;color:#5f6368;}
+.metric-val{font-size:0.88rem;font-weight:500;color:#202124;font-family:'Google Sans',sans-serif;}
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #f1f3f4;}
+.setting-lbl{font-size:0.88rem;color:#202124;}
+.setting-desc{font-size:0.78rem;color:#5f6368;margin-top:2px;}
+.toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#dadce0;border-radius:24px;transition:0.3s;}
+.slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle input:checked + .slider{background:#34A853;}
+.toggle input:checked + .slider::before{transform:translateX(20px);}
+.sensor-card{background:#f8f9fa;border-radius:8px;padding:12px;text-align:center;border:1px solid #e8eaed;}
+.sensor-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 6px;}
+.sensor-dot.ok{background:#34A853;box-shadow:0 0 6px rgba(52,168,83,0.5);}
+.sensor-dot.warn{background:#FBBC05;box-shadow:0 0 6px rgba(251,188,5,0.5);}
+.sensor-dot.err{background:#EA4335;box-shadow:0 0 6px rgba(234,67,53,0.5);animation:pulse 1s infinite;}
+.sensor-id{font-size:0.72rem;color:#5f6368;font-family:'Google Sans',sans-serif;}
+.sensor-type{font-size:0.78rem;color:#202124;margin-top:2px;font-family:'Google Sans',sans-serif;}
+</style>
+</head>
+<body>
+<header class="gm-header">
+  <a class="gm-logo" href="/dashboard">
+    <div class="gm-logo-dots"><span></span><span></span><span></span><span></span></div>
+    <div class="gm-logo-text">FlowGrid</div>
+  </a>
+  <div class="gm-nav">
+    <a href="/dashboard">🗺️ Dashboard</a>
+    <a href="/navigate">🔍 Navigate</a>
+    <a href="/simulation">⚡ Simulation</a>
+    <a href="/system" class="active">⚙️ System</a>
+  </div>
+  <div class="gm-header-right">
+    <div class="gm-status-chip"><div class="gm-status-dot"></div>AI Active</div>
+    <span style="font-size:0.8rem;color:#5f6368;font-family:'Google Sans',sans-serif;" id="live-time">00:00:00</span>
+    <button class="gm-logout" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<div style="padding:80px 32px 32px;background:#f1f3f4;min-height:100vh;">
+  <div style="max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+    <div>
+      <h1 style="font-family:'Google Sans',sans-serif;font-size:1.4rem;font-weight:500;color:#202124;">System Configuration</h1>
+      <p style="font-size:0.85rem;color:#5f6368;margin-top:4px;">FlowGrid AI Traffic Control Plane · Build v2.3.1</p>
+    </div>
+
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.12);overflow:hidden;">
+      <div style="padding:14px 20px;border-bottom:1px solid #e8eaed;display:flex;align-items:center;gap:10px;"><span style="color:#1a73e8;">⚡</span><div style="font-family:'Google Sans',sans-serif;font-weight:500;color:#202124;">AI Control Settings</div></div>
+      <div style="padding:0 20px;">
+        <div class="setting-item"><div><div class="setting-lbl">Adaptive signal logic</div><div class="setting-desc">Dynamically adjust green/red duration based on live queue length</div></div><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="setting-item"><div><div class="setting-lbl">Adjacent signal coordination</div><div class="setting-desc">Sync neighbouring intersections for continuous green wave</div></div><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="setting-item"><div><div class="setting-lbl">Emergency vehicle override (CV)</div><div class="setting-desc">Computer vision model triggers green corridor for ambulances</div></div><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="setting-item"><div><div class="setting-lbl">Pedestrian halt on emergency</div><div class="setting-desc">Block pedestrian crossings during active ambulance corridor</div></div><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="setting-item" style="border:none;"><div><div class="setting-lbl">Fail-safe mode</div><div class="setting-desc">Revert to predefined safety timing if sensor data is lost</div></div><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label></div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.12);overflow:hidden;">
+      <div style="padding:14px 20px;border-bottom:1px solid #e8eaed;display:flex;align-items:center;gap:10px;"><span style="color:#34A853;">◎</span><div style="font-family:'Google Sans',sans-serif;font-weight:500;color:#202124;">Sensor Network Status</div></div>
+      <div style="padding:16px 20px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">
+          <div class="sensor-card"><div class="sensor-dot ok"></div><div class="sensor-id">SNS-001</div><div class="sensor-type">Camera</div></div>
+          <div class="sensor-card"><div class="sensor-dot ok"></div><div class="sensor-id">SNS-002</div><div class="sensor-type">Lidar</div></div>
+          <div class="sensor-card"><div class="sensor-dot ok"></div><div class="sensor-id">SNS-003</div><div class="sensor-type">Loop</div></div>
+          <div class="sensor-card"><div class="sensor-dot warn"></div><div class="sensor-id">SNS-004</div><div class="sensor-type">Camera</div></div>
+          <div class="sensor-card"><div class="sensor-dot ok"></div><div class="sensor-id">SNS-005</div><div class="sensor-type">Loop</div></div>
+          <div class="sensor-card"><div class="sensor-dot ok"></div><div class="sensor-id">SNS-006</div><div class="sensor-type">Lidar</div></div>
+          <div class="sensor-card"><div class="sensor-dot err"></div><div class="sensor-id">SNS-007</div><div class="sensor-type">Camera</div></div>
+          <div class="sensor-card"><div class="sensor-dot ok"></div><div class="sensor-id">SNS-008</div><div class="sensor-type">Loop</div></div>
+        </div>
+        <div style="display:flex;gap:20px;font-size:0.8rem;font-family:'Google Sans',sans-serif;">
+          <span style="color:#137333;">● 6 Online</span>
+          <span style="color:#b5770d;">● 1 Degraded</span>
+          <span style="color:#c5221f;">● 1 Offline → Fail-safe</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.12);overflow:hidden;">
+      <div style="padding:14px 20px;border-bottom:1px solid #e8eaed;display:flex;align-items:center;gap:10px;"><span style="color:#b5770d;">⚠</span><div style="font-family:'Google Sans',sans-serif;font-weight:500;color:#202124;">Fail-Safe Configuration</div></div>
+      <div style="padding:0 20px;">
+        <div class="metric-row"><span class="metric-label">Default green duration (N-S)</span><span class="metric-val">30s</span></div>
+        <div class="metric-row"><span class="metric-label">Default green duration (E-W)</span><span class="metric-val">30s</span></div>
+        <div class="metric-row"><span class="metric-label">Yellow transition</span><span class="metric-val">4s</span></div>
+        <div class="metric-row" style="border:none;"><span class="metric-label">Sensor timeout threshold</span><span class="metric-val">5s → auto fail-safe</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button style="padding:10px 20px;border:1px solid #dadce0;border-radius:4px;background:#fff;font-family:'Google Sans',sans-serif;font-size:0.88rem;font-weight:500;color:#5f6368;cursor:pointer;" onclick="resetDefaults()">Reset defaults</button>
+      <button style="padding:10px 24px;border:none;border-radius:4px;background:#1a73e8;color:#fff;font-family:'Google Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;" onclick="saveSettings()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const socket = io("http://localhost:5000");
+socket.on("ambulance_detected", (data) => {
+  console.log("🚑 Ambulance detected:", data);
+});
+socket.on("reroute_alert", (data) => {
+  console.log("Reroute alert:", data);
+});
+
+function updateClock(){const el=document.getElementById('live-time');if(el){const n=new Date();el.textContent=n.toTimeString().slice(0,8);}}
+setInterval(updateClock,1000);updateClock();
+async function logout(){try{await fetch('/api/auth/logout',{method:'POST'});}catch(e){}window.location.href='/login';}
+function resetDefaults(){const btn=event.target;btn.textContent='Resetting...';btn.style.background='#5f6368';setTimeout(()=>{btn.textContent='✓ Reset';btn.style.background='#34A853';setTimeout(()=>{btn.textContent='Reset defaults';btn.style.background='#fff';btn.style.borderColor='#dadce0';btn.style.color='#5f6368';},1500);},600);}
+function saveSettings(){const btn=event.target;btn.textContent='Saving...';btn.style.background='#5f6368';setTimeout(()=>{btn.textContent='✓ Saved';btn.style.background='#34A853';setTimeout(()=>{btn.textContent='Save changes';btn.style.background='#1a73e8';},2000);},800);}
+</script>
+</body>
+</html>

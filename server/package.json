@@ -1,0 +1,17 @@
+{
+  "name": "traffic-server",
+  "version": "1.0.0",
+  "description": "Traffic analysis server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.13.6",
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "form-data": "^4.0.5",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.3"
+  }
+}

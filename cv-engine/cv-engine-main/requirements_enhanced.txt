@@ -1,0 +1,39 @@
+# Computer Vision Engine Requirements for Traffic Analysis
+
+# Core Computer Vision
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# Data Processing
+pandas>=2.0.0
+Pillow>=10.0.0
+
+# Redis Integration
+redis>=4.5.0
+
+# Performance and Optimization
+psutil>=5.9.0
+tqdm>=4.65.0
+
+# Visualization (optional)
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Development and Testing
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Logging and Monitoring
+loguru>=0.7.0
+
+# Configuration Management
+pyyaml>=6.0
+
+# Optional: GPU Support (uncomment if using NVIDIA GPU)
+# torch>=2.0.0+cu118 --index-url https://download.pytorch.org/whl/cu118
+# torchvision>=0.15.0+cu118 --index-url https://download.pytorch.org/whl/cu118
+
+# Optional: Intel OpenVINO for CPU optimization (uncomment if needed)
+# openvino>=2023.0.0

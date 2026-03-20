@@ -1,0 +1,6 @@
+names:
+  - non-motor-vehicle
+  - person
+nc: 2
+train: traffic-9/train/images
+val: traffic-9/valid/images

@@ -1,0 +1,13 @@
+names:
+- non-motor-vehicle
+- person
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: traffic-3bhpc
+  url: https://universe.roboflow.com/traffic-twinv/traffic-3bhpc/dataset/9
+  version: 9
+  workspace: traffic-twinv
+test: ../test/images
+train: ../train/images
+val: ../valid/images

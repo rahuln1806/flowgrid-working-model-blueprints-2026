@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowGrid — Navigate</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto',sans-serif;background:#f1f3f4;min-height:100vh;overflow:hidden;}
+.gm-header{position:fixed;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:1000;display:flex;align-items:center;padding:0 16px;gap:12px;}
+.gm-logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.gm-logo-dots{display:flex;gap:2px;}
+.gm-logo-dots span{width:8px;height:8px;border-radius:50%;}
+.gm-logo-dots span:nth-child(1){background:#4285F4;}
+.gm-logo-dots span:nth-child(2){background:#EA4335;}
+.gm-logo-dots span:nth-child(3){background:#FBBC05;}
+.gm-logo-dots span:nth-child(4){background:#34A853;}
+.gm-logo-text{font-family:'Google Sans',sans-serif;font-size:1.1rem;font-weight:500;color:#202124;}
+.gm-nav{display:flex;align-items:center;gap:2px;margin-left:8px;}
+.gm-nav a{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:4px;text-decoration:none;font-family:'Google Sans',sans-serif;font-size:0.85rem;font-weight:500;color:#5f6368;transition:all 0.15s;}
+.gm-nav a:hover{background:#f1f3f4;color:#202124;}
+.gm-nav a.active{color:#1a73e8;background:#e8f0fe;}
+.gm-header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.gm-status-chip{display:flex;align-items:center;gap:6px;background:#e6f4ea;color:#137333;padding:5px 12px;border-radius:16px;font-size:0.78rem;font-family:'Google Sans',sans-serif;font-weight:500;}
+.gm-status-dot{width:7px;height:7px;border-radius:50%;background:#34A853;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.gm-logout{background:none;border:1px solid #dadce0;border-radius:4px;padding:6px 14px;font-family:'Google Sans',sans-serif;font-size:0.82rem;color:#5f6368;cursor:pointer;transition:all 0.2s;}
+.gm-logout:hover{background:#f1f3f4;color:#202124;}
+.map-base{position:fixed;inset:0;top:56px;background:#e8edf3;}
+.map-tiles{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:40px 40px;}
+.sidebar{position:fixed;top:56px;left:0;width:380px;bottom:0;background:#fff;z-index:100;display:flex;flex-direction:column;box-shadow:2px 0 8px rgba(0,0,0,0.08);overflow:hidden;}
+.sidebar-header{padding:16px 20px;border-bottom:1px solid #e8eaed;}
+.sidebar-title{font-family:'Google Sans',sans-serif;font-size:1.1rem;font-weight:500;color:#202124;}
+.sidebar-sub{font-size:0.8rem;color:#5f6368;margin-top:2px;}
+.sidebar-body{flex:1;overflow-y:auto;padding:12px;}
+.sidebar-body::-webkit-scrollbar{width:4px;}
+.sidebar-body::-webkit-scrollbar-thumb{background:#dadce0;border-radius:2px;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:500;font-family:'Google Sans',sans-serif;}
+.chip-green{background:#e6f4ea;color:#137333;}
+.chip-red{background:#fce8e6;color:#c5221f;}
+.chip-yellow{background:#fef7e0;color:#b5770d;}
+.chip-blue{background:#e8f0fe;color:#1557b0;}
+.bottom-sheet{position:fixed;bottom:0;left:380px;right:0;background:#fff;border-radius:12px 12px 0 0;box-shadow:0 -2px 8px rgba(0,0,0,0.1);padding:12px 20px;z-index:100;display:flex;align-items:center;gap:20px;font-size:0.82rem;color:#5f6368;font-family:'Google Sans',sans-serif;}
+.mode-btn{flex:1;padding:8px 4px;border:1px solid #dadce0;border-radius:8px;background:#fff;font-size:0.78rem;cursor:pointer;font-family:'Google Sans',sans-serif;color:#5f6368;transition:all 0.2s;}
+.mode-btn.active,.mode-btn:hover{background:#e8f0fe;border-color:#1a73e8;color:#1a73e8;}
+.route-opt{background:#fff;border:1px solid #dadce0;border-radius:8px;padding:12px;cursor:pointer;transition:all 0.2s;margin-bottom:8px;}
+.route-opt:hover{border-color:#1a73e8;box-shadow:0 1px 4px rgba(26,115,232,0.2);}
+.route-opt.recommended{border-color:#34A853;box-shadow:0 1px 4px rgba(52,168,83,0.2);}
+.route-opt.selected{border-color:#1a73e8;background:#f0f4ff;}
+.modal-content{background:#fff;border-radius:8px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.25);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#5f6368;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+.zoom-controls{position:fixed;right:16px;top:80px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.zoom-btn{width:40px;height:40px;border:none;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#5f6368;transition:all 0.2s;}
+.zoom-btn:hover{background:#f1f3f4;color:#202124;}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0;}to{transform:translateX(-50%) translateY(0);opacity:1;}}
+</style>
+</head>
+<body>
+<header class="gm-header">
+  <a class="gm-logo" href="/dashboard">
+    <div class="gm-logo-dots"><span></span><span></span><span></span><span></span></div>
+    <div class="gm-logo-text">FlowGrid</div>
+  </a>
+  <div class="gm-nav">
+    <a href="/dashboard">🗺️ Dashboard</a>
+    <a href="/navigate" class="active">🔍 Navigate</a>
+    <a href="/simulation">⚡ Simulation</a>
+    <a href="/system">⚙️ System</a>
+  </div>
+  <div class="gm-header-right">
+    <div class="gm-status-chip"><div class="gm-status-dot"></div>AI Active</div>
+    <span style="font-size:0.8rem;color:#5f6368;font-family:'Google Sans',sans-serif;" id="live-time">00:00:00</span>
+    <button class="gm-logout" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<div class="map-base">
+  <div class="map-tiles"></div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">+</button>
+    <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+  </div>
+  <svg width="100%" height="100%" style="position:absolute;inset:0;" viewBox="0 0 900 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="900" height="700" fill="#e8edf3"/>
+    <line x1="0" y1="200" x2="900" y2="200" stroke="#fff" stroke-width="20" opacity="0.9"/>
+    <line x1="0" y1="400" x2="900" y2="400" stroke="#fff" stroke-width="20" opacity="0.9"/>
+    <line x1="200" y1="0" x2="200" y2="700" stroke="#fff" stroke-width="20" opacity="0.9"/>
+    <line x1="500" y1="0" x2="500" y2="700" stroke="#fff" stroke-width="20" opacity="0.9"/>
+    <line x1="100" y1="100" x2="700" y2="500" stroke="#fff" stroke-width="14" opacity="0.7"/>
+    <rect x="0" y="0" width="200" height="200" fill="#e8f5e9" opacity="0.5"/>
+    <rect x="200" y="0" width="300" height="200" fill="#f5f5f5" opacity="0.5"/>
+    <rect x="500" y="0" width="400" height="200" fill="#f5f5f5" opacity="0.5"/>
+    <rect x="0" y="200" width="200" height="200" fill="#f5f5f5" opacity="0.5"/>
+    <rect x="200" y="200" width="300" height="200" fill="#fff9e6" opacity="0.5"/>
+    <rect x="500" y="200" width="400" height="200" fill="#fce8e6" opacity="0.4"/>
+    <polyline id="route-line" points="180,180 500,180 500,380" fill="none" stroke="#1a73e8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0" stroke-dasharray="12,6"><animate attributeName="stroke-dashoffset" values="200;0" dur="2s" repeatCount="indefinite"/></polyline>
+    <circle cx="180" cy="180" r="14" fill="#1a73e8"/><circle cx="180" cy="180" r="6" fill="#fff"/>
+    <circle cx="180" cy="180" r="22" fill="none" stroke="#1a73e8" stroke-width="1.5" opacity="0.4"><animate attributeName="r" values="16;28;16" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/></circle>
+    <text x="180" y="155" text-anchor="middle" fill="#1a73e8" font-size="11" font-family="Google Sans,sans-serif" font-weight="500">Anna Nagar</text>
+    <circle cx="500" cy="380" r="14" fill="#EA4335"/><circle cx="500" cy="380" r="6" fill="#fff"/>
+    <text x="500" y="355" text-anchor="middle" fill="#EA4335" font-size="11" font-family="Google Sans,sans-serif" font-weight="500">Destination</text>
+    <circle cx="500" cy="180" r="8" fill="#34A853"/>
+    <text x="516" y="184" fill="#137333" font-size="9" font-family="Google Sans,sans-serif">Green 22s</text>
+    <circle cx="200" cy="400" r="8" fill="#FBBC05"/>
+    <text x="216" y="404" fill="#b5770d" font-size="9" font-family="Google Sans,sans-serif">Yellow 8s</text>
+    <rect x="560" y="20" width="200" height="80" rx="8" fill="white" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
+    <text x="574" y="45" fill="#5f6368" font-size="10" font-family="Google Sans,sans-serif">Estimated arrival</text>
+    <text x="574" y="72" fill="#202124" font-size="26" font-weight="500" font-family="Google Sans,sans-serif">18 min</text>
+    <text x="574" y="92" fill="#137333" font-size="10" font-family="Google Sans,sans-serif">↓ 12 min faster than usual</text>
+    <text x="60" y="100" fill="#80868b" font-size="11" font-family="Roboto,sans-serif">Anna Nagar</text>
+    <text x="290" y="100" fill="#80868b" font-size="11" font-family="Roboto,sans-serif">T. Nagar</text>
+    <text x="560" y="100" fill="#80868b" font-size="11" font-family="Roboto,sans-serif">Adyar</text>
+    <text x="60" y="300" fill="#80868b" font-size="11" font-family="Roboto,sans-serif">Vadapalani</text>
+    <text x="290" y="300" fill="#80868b" font-size="11" font-family="Roboto,sans-serif">Koyambedu</text>
+  </svg>
+  <div style="position:absolute;right:24px;top:16px;display:flex;flex-direction:column;gap:2px;">
+    <button style="width:40px;height:40px;background:#fff;border:none;border-radius:4px 4px 0 0;box-shadow:0 1px 4px rgba(0,0,0,0.2);font-size:1.2rem;cursor:pointer;color:#5f6368;">+</button>
+    <button style="width:40px;height:40px;background:#fff;border:none;border-radius:0 0 4px 4px;box-shadow:0 1px 4px rgba(0,0,0,0.2);font-size:1.2rem;cursor:pointer;color:#5f6368;">−</button>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">Route Planner</div>
+    <div class="sidebar-sub">AI-optimized routes · Live signal data</div>
+  </div>
+  <div class="sidebar-body">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+      <div style="position:relative;"><input id="from-input" type="text" value="Anna Nagar, Chennai" style="width:100%;padding:12px 44px 12px 44px;border:1px solid #dadce0;border-radius:8px;font-size:0.88rem;color:#202124;outline:none;font-family:'Roboto',sans-serif;"/><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:0.9rem;">🔵</span></div>
+      <div style="position:relative;"><input id="to-input" type="text" placeholder="Choose destination..." style="width:100%;padding:12px 44px 12px 44px;border:1px solid #dadce0;border-radius:8px;font-size:0.88rem;color:#202124;outline:none;font-family:'Roboto',sans-serif;"/><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:0.9rem;">📍</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="mode-btn active" onclick="setMode(this)">🚗 Car</button>
+      <button class="mode-btn" onclick="setMode(this)">🏍️ Bike</button>
+      <button class="mode-btn" onclick="setMode(this)">🚶 Walk</button>
+      <button class="mode-btn" onclick="setMode(this)">🚌 Bus</button>
+    </div>
+    <button onclick="findRoutes()" style="width:100%;padding:12px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-family:'Google Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;margin-bottom:12px;">Search</button>
+    <div id="route-results" style="display:none;">
+      <div style="font-size:0.78rem;font-weight:500;color:#5f6368;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-family:'Google Sans',sans-serif;">AI-Optimized routes</div>
+      <div class="route-opt recommended" onclick="selectRoute(this)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-family:'Google Sans',sans-serif;font-size:0.9rem;font-weight:500;color:#202124;">Via Anna Salai → Mount Road</div><div style="font-size:0.78rem;color:#5f6368;margin-top:2px;">18 min · 7.2 km · 4 signals</div></div><span class="chip chip-green" style="font-size:0.7rem;">Best route</span></div>
+        <div style="height:4px;background:#e8eaed;border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:25%;background:#34A853;border-radius:2px;"></div></div>
+        <div style="font-size:0.72rem;color:#137333;margin-top:4px;font-family:'Google Sans',sans-serif;">Low traffic · All signals green</div>
+      </div>
+      <div class="route-opt" onclick="selectRoute(this)">
+        <div style="display:flex;justify-content:space-between;"><div><div style="font-family:'Google Sans',sans-serif;font-size:0.9rem;font-weight:500;color:#202124;">Via Poonamallee High Road</div><div style="font-size:0.78rem;color:#5f6368;margin-top:2px;">26 min · 9.1 km · 7 signals</div></div></div>
+        <div style="height:4px;background:#e8eaed;border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:55%;background:#FBBC05;border-radius:2px;"></div></div>
+        <div style="font-size:0.72rem;color:#b5770d;margin-top:4px;font-family:'Google Sans',sans-serif;">Moderate traffic · 2 delays expected</div>
+      </div>
+      <div class="route-opt" onclick="selectRoute(this)">
+        <div style="display:flex;justify-content:space-between;"><div><div style="font-family:'Google Sans',sans-serif;font-size:0.9rem;font-weight:500;color:#202124;">Via OMR Connector</div><div style="font-size:0.78rem;color:#5f6368;margin-top:2px;">34 min · 11.8 km · 9 signals</div></div><span class="chip chip-red" style="font-size:0.7rem;">Avoid</span></div>
+        <div style="height:4px;background:#e8eaed;border-radius:2px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:80%;background:#EA4335;border-radius:2px;"></div></div>
+        <div style="font-size:0.72rem;color:#c5221f;margin-top:4px;font-family:'Google Sans',sans-serif;">High congestion · Not recommended</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:#f8f9fa;border-radius:8px;">
+      <div style="font-size:0.78rem;font-weight:500;color:#5f6368;margin-bottom:8px;font-family:'Google Sans',sans-serif;">Traffic density</div>
+      <div style="height:6px;border-radius:3px;background:linear-gradient(90deg,#34A853,#FBBC05,#EA4335);margin-bottom:4px;"></div>
+      <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#80868b;"><span>Low</span><span>Moderate</span><span>High</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast-notification" style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#34A853;color:#fff;padding:12px 20px;border-radius:4px;font-family:'Google Sans',sans-serif;font-size:0.9rem;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:2000;animation:slideUp 0.3s ease;">
+  ✅ Image uploaded successfully
+</div>
+
+<!-- Detection Modal -->
+<div id="detection-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="margin:0;font-family:'Google Sans',sans-serif;color:#202124;font-size:1.1rem;">AI Detection Results</h3>
+      <button onclick="closeModal()" class="modal-close">×</button>
+    </div>
+    <img id="modal-preview" style="width:100%;border-radius:4px;margin-bottom:16px;max-height:300px;object-fit:contain;" />
+    <div id="detection-results" style="font-family:'Roboto',sans-serif;font-size:0.9rem;color:#202124;"></div>
+  </div>
+</div>
+
+<div class="bottom-sheet">
+  <span id="route-summary">Enter a destination to find the best route</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+    <button id="uploadBtn" onclick="document.getElementById('imageInput').click()" style="background:#1a73e8;color:#fff;border:none;border-radius:4px;padding:6px 14px;font-family:'Google Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;">📎 Upload Image</button>
+    <input type="file" id="imageInput" style="display:none;" />
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io("http://localhost:5000");
+
+socket.on("ambulance_detected", (data) => {
+  alert("🚑 Ambulance detected! Route: " + data.route.join(" → "));
+});
+
+socket.on("reroute_alert", (data) => {
+  alert(data.message + " Route: " + data.route.join(" → "));
+});
+
+// Zoom functionality
+let currentZoom = 1;
+const minZoom = 0.5;
+const maxZoom = 2;
+const zoomStep = 0.2;
+
+function zoomIn() {
+  if (currentZoom < maxZoom) {
+    currentZoom += zoomStep;
+    updateZoom();
+  }
+}
+
+function zoomOut() {
+  if (currentZoom > minZoom) {
+    currentZoom -= zoomStep;
+    updateZoom();
+  }
+}
+
+function updateZoom() {
+  const svg = document.querySelector('svg');
+  if (svg) {
+    const originalViewBox = "0 0 900 700";
+    const [x, y, width, height] = originalViewBox.split(' ').map(Number);
+    
+    // Calculate new viewBox dimensions
+    const newWidth = width / currentZoom;
+    const newHeight = height / currentZoom;
+    
+    // Center the zoom
+    const newX = x + (width - newWidth) / 2;
+    const newY = y + (height - newHeight) / 2;
+    
+    const newViewBox = `${newX} ${newY} ${newWidth} ${newHeight}`;
+    svg.setAttribute('viewBox', newViewBox);
+  }
+}
+
+function updateClock(){const el=document.getElementById('live-time');if(el){const n=new Date();el.textContent=n.toTimeString().slice(0,8);}}
+setInterval(updateClock,1000);updateClock();
+async function logout(){try{await fetch('/api/auth/logout',{method:'POST'});}catch(e){}window.location.href='/login';}
+function setMode(btn){document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function selectRoute(el){document.querySelectorAll('.route-opt').forEach(r=>r.classList.remove('selected'));el.classList.add('selected');document.getElementById('route-summary').textContent='Route selected · Directions starting from Anna Nagar';document.getElementById('route-line').setAttribute('opacity','1');}
+function findRoutes(){const to=document.getElementById('to-input').value.trim();if(!to){document.getElementById('to-input').focus();return;}document.getElementById('route-results').style.display='block';document.getElementById('route-line').setAttribute('opacity','0.8');document.getElementById('route-summary').textContent='3 routes found · Best: 18 min via Anna Salai';}
+
+// Toast notification function
+function showToast(message) {
+  const toast = document.getElementById("toast-notification");
+  if (toast) {
+    toast.textContent = message;
+    toast.style.display = "block";
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 3000);
+  }
+}
+
+// Initialize image upload when DOM is ready
+function initializeImageUpload() {
+  const imageInput = document.getElementById("imageInput");
+  if (!imageInput) {
+    console.error("Image input element not found");
+    return;
+  }
+
+  imageInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Show upload notification
+    showToast("✅ Image uploaded successfully");
+
+    // Show preview in modal
+    const modalPreview = document.getElementById("modal-preview");
+    if (modalPreview) {
+      modalPreview.src = URL.createObjectURL(file);
+    }
+    
+    const modal = document.getElementById("detection-modal");
+    if (modal) {
+      modal.style.display = "flex";
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/detect", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      // Display results nicely
+      let resultsHtml = "<h4 style='margin-bottom:12px;color:#202124;'>Detection Results:</h4>";
+      if (data.detections && data.detections.length > 0) {
+        data.detections.forEach(det => {
+          const className = det.class === 1 ? "Ambulance" : det.class === 2 ? "Car" : det.class === 3 ? "Truck" : `Class ${det.class}`;
+          resultsHtml += `<div style="margin:8px 0;padding:8px;background:#f1f3f4;border-radius:4px;color:#202124;">🚗 ${className} - Confidence: ${(det.confidence * 100).toFixed(1)}%</div>`;
+        });
+      } else {
+        resultsHtml += "<div style='padding:8px;color:#5f6368;'>No objects detected</div>";
+      }
+
+      const detectionResults = document.getElementById("detection-results");
+      if (detectionResults) {
+        detectionResults.innerHTML = resultsHtml;
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      const detectionResults = document.getElementById("detection-results");
+      if (detectionResults) {
+        detectionResults.innerHTML = "<div style='color:#c5221f;'>Error processing image. Make sure the backend is running.</div>";
+      }
+    }
+  });
+}
+
+// Close modal function
+function closeModal() {
+  document.getElementById("detection-modal").style.display = "none";
+}
+
+// Call initialization when page is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeImageUpload);
+} else {
+  initializeImageUpload();
+}
+</script>
+</body>
+</html>

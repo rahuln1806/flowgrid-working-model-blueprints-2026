@@ -1,0 +1,10 @@
+dataset_classes:
+  0: non-motor-vehicle
+  1: person
+mapping:
+  0: 1
+  1: 0
+traffic_classes:
+  0: pedestrian
+  1: vehicle
+  2: ambulance

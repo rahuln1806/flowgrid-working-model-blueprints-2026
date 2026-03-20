@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowGrid — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto',sans-serif;background:#f1f3f4;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.bg-map{position:fixed;inset:0;background:#e8edf3;background-size:cover;filter:blur(2px);opacity:0.7;}
+.overlay{position:fixed;inset:0;background:rgba(255,255,255,0.4);}
+.card{position:relative;z-index:1;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.12),0 4px 20px rgba(0,0,0,0.15);width:400px;overflow:hidden;}
+.card-header{padding:32px 32px 0;text-align:center;}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;}
+.logo-icon{display:flex;gap:2px;}
+.logo-icon span{width:10px;height:10px;border-radius:50%;}
+.logo-icon span:nth-child(1){background:#4285F4;}
+.logo-icon span:nth-child(2){background:#EA4335;}
+.logo-icon span:nth-child(3){background:#FBBC05;}
+.logo-icon span:nth-child(4){background:#34A853;}
+.logo-text{font-family:'Google Sans',sans-serif;font-size:1.5rem;font-weight:500;color:#202124;letter-spacing:1px;}
+.card-title{font-family:'Google Sans',sans-serif;font-size:1.5rem;color:#202124;font-weight:400;margin-bottom:8px;}
+.card-sub{font-size:0.9rem;color:#5f6368;margin-bottom:8px;}
+.tabs{display:flex;border-bottom:1px solid #e8eaed;margin-top:24px;}
+.tab{flex:1;padding:12px;background:none;border:none;font-family:'Google Sans',sans-serif;font-size:0.9rem;color:#5f6368;cursor:pointer;position:relative;transition:color 0.2s;}
+.tab.active{color:#1a73e8;}
+.tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:#1a73e8;border-radius:3px 3px 0 0;}
+.card-body{padding:24px 32px 32px;}
+.form{display:none;}
+.form.active{display:block;}
+.field{margin-bottom:16px;}
+.field input{width:100%;padding:14px 16px;border:1px solid #dadce0;border-radius:4px;font-family:'Roboto',sans-serif;font-size:0.9rem;color:#202124;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.field input:focus{border-color:#1a73e8;box-shadow:0 0 0 2px rgba(26,115,232,0.2);}
+.field input::placeholder{color:#80868b;}
+.plate-box{border:2px dashed #dadce0;border-radius:4px;padding:12px 16px;text-align:center;background:#f8f9fa;}
+.plate-box input{border:none;background:none;text-align:center;font-size:1.2rem;font-weight:700;letter-spacing:6px;color:#202124;width:100%;outline:none;text-transform:uppercase;}
+.plate-hint{font-size:0.72rem;color:#80868b;margin-top:6px;text-align:center;}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;}
+.divider span{font-size:0.75rem;color:#80868b;white-space:nowrap;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e8eaed;}
+.btn{width:100%;padding:12px;border:none;border-radius:4px;font-family:'Google Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+.btn-primary{background:#1a73e8;color:#fff;}
+.btn-primary:hover{background:#1557b0;}
+.btn-green{background:#34A853;color:#fff;}
+.btn-green:hover{background:#2d8f47;}
+.msg{padding:10px 14px;border-radius:4px;font-size:0.82rem;margin-bottom:12px;display:none;}
+.msg.error{background:#fce8e6;color:#c5221f;border:1px solid #f5c6c5;}
+.msg.success{background:#e6f4ea;color:#137333;border:1px solid #ceead6;}
+</style>
+</head>
+<body>
+<div class="bg-map"></div>
+<div class="overlay"></div>
+<div class="card">
+  <div class="card-header">
+    <div class="logo-row">
+      <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+      <div class="logo-text">FlowGrid</div>
+    </div>
+    <div class="card-title">AI Traffic Control</div>
+    <div class="card-sub">Chennai Metropolitan Grid</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login',this)">Sign in</button>
+    <button class="tab" onclick="switchTab('signup',this)">Create account</button>
+  </div>
+  <div class="card-body">
+    <div class="msg error" id="msg-error"></div>
+    <div class="msg success" id="msg-success"></div>
+    <div class="form active" id="form-login">
+      <div class="field"><input type="text" id="login-username" placeholder="Username" autocomplete="off"/></div>
+      <div class="field"><input type="password" id="login-password" placeholder="Password"/></div>
+      <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
+    </div>
+    <div class="form" id="form-signup">
+      <div class="field"><input type="text" id="signup-username" placeholder="Username" autocomplete="off"/></div>
+      <div class="field"><input type="password" id="signup-password" placeholder="Password"/></div>
+      <div class="field"><input type="password" id="signup-confirm" placeholder="Confirm password"/></div>
+      <div class="divider"><span>Vehicle registration</span></div>
+      <div class="plate-box">
+        <input type="text" id="signup-plate" placeholder="TN 01 AB 1234" maxlength="16"/>
+        <div class="plate-hint">State · District · Series · Number</div>
+      </div>
+      <button class="btn btn-green" style="margin-top:16px;" onclick="doSignup()">Create account</button>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.form').forEach(f=>f.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('form-'+tab).classList.add('active');
+  clearMsg();
+}
+function showError(msg){const e=document.getElementById('msg-error');e.textContent=msg;e.style.display='block';document.getElementById('msg-success').style.display='none';}
+function showSuccess(msg){const e=document.getElementById('msg-success');e.textContent=msg;e.style.display='block';document.getElementById('msg-error').style.display='none';}
+function clearMsg(){document.getElementById('msg-error').style.display='none';document.getElementById('msg-success').style.display='none';}
+async function doLogin(){
+  clearMsg();
+  const username=document.getElementById('login-username').value.trim();
+  const password=document.getElementById('login-password').value;
+  if(!username||!password){showError('Please fill in all fields.');return;}
+  // Dummy login - always success
+  showSuccess('Signed in! Loading dashboard...');
+  setTimeout(()=>{window.location.href='/dashboard';},800);
+}
+async function doSignup(){
+  clearMsg();
+  const username=document.getElementById('signup-username').value.trim();
+  const password=document.getElementById('signup-password').value;
+  const confirm=document.getElementById('signup-confirm').value;
+  const number_plate=document.getElementById('signup-plate').value.trim();
+  if(!username||!password||!confirm||!number_plate){showError('Please fill in all fields.');return;}
+  if(password!==confirm){showError('Passwords do not match.');return;}
+  // Dummy signup - always success
+  showSuccess('Account created! Redirecting...');
+  setTimeout(()=>{window.location.href='/dashboard';},800);
+}
+document.getElementById('signup-plate').addEventListener('input',function(){const p=this.selectionStart;this.value=this.value.toUpperCase();this.setSelectionRange(p,p);});
+document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('signup-plate').addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();});
+</script>
+</body>
+</html>
+
+
+
